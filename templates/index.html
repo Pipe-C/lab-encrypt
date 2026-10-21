@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laboratorio de Cifrado & Ciberseguridad | Felipe Cano</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Hoja de Estilos de Laboratorio -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body class="antialiased">
+
+  <div class="app-container">
+    
+    <!-- Encabezado del Laboratorio -->
+    <header class="text-center mb-8">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1 bg-slate-900/90 border border-slate-800 rounded-full text-xs text-emerald-400 mb-3 font-mono shadow-md">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Servidor Criptográfico Activo
+      </div>
+      <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Laboratorio de Cifrado & Ciberseguridad</h1>
+      <p class="text-slate-400 text-sm md:text-base mt-1.5">
+        RSA-OAEP SHA-256 • RockYou Hash Benchmark • Argon2id • AES-128 | <b class="text-slate-200">Estudiante: Felipe Cano</b>
+      </p>
+    </header>
+
+    <!-- Navegación por Pestañas -->
+    <nav class="flex space-x-3 border-b border-slate-800/80 mb-8 pb-3 overflow-x-auto text-sm">
+      <button id="tab-rsa-btn" class="px-4 py-2.5 rounded-xl font-bold transition-all bg-emerald-600 text-white shadow-lg shadow-emerald-900/30 flex items-center gap-2" onclick="switchTab('rsa')">
+        <i class="fa-solid fa-key text-xs"></i> 1. RSA-OAEP (CyberChef)
+      </button>
+      <button id="tab-rockyou-btn" class="px-4 py-2.5 rounded-xl font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center gap-2" onclick="switchTab('rockyou')">
+        <i class="fa-solid fa-bolt text-xs text-amber-400"></i> 2. RockYou (SHA-256)
+      </button>
+      <button id="tab-argon2-btn" class="px-4 py-2.5 rounded-xl font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center gap-2" onclick="switchTab('argon2')">
+        <i class="fa-solid fa-fingerprint text-xs text-purple-400"></i> 3. Argon2id
+      </button>
+      <button id="tab-aes-btn" class="px-4 py-2.5 rounded-xl font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center gap-2" onclick="switchTab('aes')">
+        <i class="fa-solid fa-lock text-xs text-cyan-400"></i> 4. AES-128 Fernet
+      </button>
+    </nav>
+
+    <!-- MÓDULO 1: RSA CYBERCHEF COMPATIBLE -->
+    <div id="tab-rsa" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Operaciones Cifrado/Descifrado -->
+      <div class="card card-secure">
+        <div class="card-header">
+          <span class="badge badge-secure"><i class="fa-solid fa-check-double"></i> SEGURO</span>
+          <h2 class="card-title">Cifrado RSA-OAEP SHA-256</h2>
+        </div>
+        <p class="card-description">Interoperable directamente con la receta oficial de <b>CyberChef.io</b> usando esquema de relleno OAEP y función resumen SHA-256.</p>
+
+        <div class="form-group">
+          <label class="form-label">Mensaje en Texto Claro:</label>
+          <input id="rsa-input-msg" type="text" class="form-input" value="Mensaje Confidencial de Felipe Cano" placeholder="Escribe el texto a cifrar..." />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <button class="btn btn-primary-secure" onclick="ejecutarCifradoRSA()">
+            <i class="fa-solid fa-lock"></i> Cifrar (Pública)
+          </button>
+          <button class="btn btn-secondary" onclick="ejecutarDescifradoRSA()">
+            <i class="fa-solid fa-key"></i> Descifrar (Privada)
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Resultado (Criptograma Base64 / Texto Plano):</label>
+          <textarea id="rsa-output-result" class="form-input text-emerald-400" rows="4" readonly placeholder="El resultado de la operación aparecerá aquí..."></textarea>
+        </div>
+
+        <div id="rsa-status" class="status-alert hidden"></div>
+
+        <div class="mt-4 pt-3 border-t border-slate-800/80 text-xs flex justify-between items-center">
+          <a id="cyberchef-link" target="_blank" href="https://cyberchef.io/#recipe=RSA_Encrypt('','RSA-OAEP','SHA-256')" class="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-mono">
+            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Abrir Receta CyberChef.io
+          </a>
+        </div>
+      </div>
+
+      <!-- Gestión de Llaves PEM -->
+      <div class="card">
+        <div class="card-header">
+          <span class="badge badge-info">2048 BITS</span>
+          <h2 class="card-title">Pareja de Llaves RSA (PEM)</h2>
+        </div>
+        <p class="card-description">Llaves exportadas en PKCS#8 PEM. Se cargan automáticamente desde la carpeta <code>keys/</code>.</p>
+
+        <div class="form-group">
+          <label class="form-label">Llave Pública (SubjectPublicKeyInfo):</label>
+          <textarea id="rsa-pub-key-area" class="form-input text-cyan-300 text-xs" rows="4">{{ public_key_pem }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Llave Privada (PKCS#8):</label>
+          <textarea id="rsa-priv-key-area" class="form-input text-pink-300 text-xs" rows="5">{{ private_key_pem }}</textarea>
+        </div>
+
+        <button class="btn btn-secondary w-full" onclick="regenerarLlavesRSA()">
+          <i class="fa-solid fa-rotate"></i> Regenerar Nuevo Par de Llaves
+        </button>
+      </div>
+
+    </div>
+
+    <!-- MÓDULO 2: ATAQUE DE DICCIONARIO ROCKYOU -->
+    <div id="tab-rockyou" class="hidden">
+      <div class="card card-vulnerable">
+        <div class="card-header">
+          <span class="badge badge-vulnerable"><i class="fa-solid fa-triangle-exclamation"></i> VULNERABLE</span>
+          <h2 class="card-title">Ataque de Diccionario SHA-256 (RockYou.txt)</h2>
+        </div>
+        <p class="card-description">
+          Ingresa una clave en texto plano. El sistema genera su Hash SHA-256 e inicia la lectura secuencial de <code>rockyou.txt</code> midiendo el número exacto de líneas leídas y la velocidad del procesador.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 form-group">
+          <div>
+            <label class="form-label">Clave / Contraseña en Texto Plano:</label>
+            <input id="rockyou-pass-input" type="text" class="form-input text-amber-300" value="rockyou" placeholder="Ej: rockyou, 123456, felipecano" oninput="actualizarHashDesdeClave()" />
+          </div>
+          <div>
+            <label class="form-label">Hash SHA-256 Calculado:</label>
+            <input id="rockyou-hash-input" type="text" class="form-input text-slate-400 font-mono text-xs" readonly placeholder="Se genera automáticamente" />
+          </div>
+        </div>
+
+        <button class="btn btn-primary-vulnerable mb-6" onclick="ejecutarAtaqueRockYou()">
+          <i class="fa-solid fa-fire"></i> Probar Clave y Medir Tiempo de Lectura en RockYou
+        </button>
+
+        <div class="info-box-grid">
+          <div class="info-box">
+            <span class="info-label">Estado / Coincidencia</span>
+            <div id="metric-pass" class="info-value text-emerald">-</div>
+          </div>
+          <div class="info-box">
+            <span class="info-label">Líneas Leídas (Diccionario)</span>
+            <div id="metric-lines" class="info-value text-cyan">-</div>
+          </div>
+          <div class="info-box">
+            <span class="info-label">Tiempo Reloj (Wall Clock)</span>
+            <div id="metric-wall-time" class="info-value text-amber">-</div>
+          </div>
+          <div class="info-box">
+            <span class="info-label">Tiempo Proceso CPU</span>
+            <div id="metric-cpu-time" class="info-value text-slate-200">-</div>
+          </div>
+          <div class="info-box md:col-span-2">
+            <span class="info-label">Velocidad de Lectura y Hashing</span>
+            <div id="metric-speed" class="info-value text-purple-400">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÓDULO 3: HASHING ARGON2id -->
+    <div id="tab-argon2" class="hidden">
+      <div class="card card-secure">
+        <div class="card-header">
+          <span class="badge badge-secure"><i class="fa-solid fa-shield-halved"></i> SEGURO</span>
+          <h2 class="card-title">Derivación de Clave Segura (Argon2id)</h2>
+        </div>
+        <p class="card-description">Estructura de hashing de contraseña resistente a GPU y ASIC con 64 MB de costo de memoria y 3 iteraciones.</p>
+
+        <div class="form-group">
+          <label class="form-label">Contraseña de Entrada:</label>
+          <input id="argon2-pwd" type="password" class="form-input" value="ClaveSeguraFelipe2026" placeholder="Ingresa una clave..." />
+        </div>
+
+        <button class="btn btn-primary-secure" onclick="ejecutarArgon2()">
+          <i class="fa-solid fa-fingerprint"></i> Generar Hash Argon2id
+        </button>
+
+        <div class="mt-6">
+          <label class="form-label">Resultado Hash (JSON):</label>
+          <textarea id="argon2-result" class="form-input text-purple-300 text-xs" rows="5" readonly placeholder="El resultado derivado aparecerá aquí..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÓDULO 4: AES-128 FERNET -->
+    <div id="tab-aes" class="hidden">
+      <div class="card card-secure">
+        <div class="card-header">
+          <span class="badge badge-secure"><i class="fa-solid fa-lock"></i> SEGURO</span>
+          <h2 class="card-title">Cifrado Simétrico AES-128 (Fernet)</h2>
+        </div>
+        <p class="card-description">Cifrado autenticado con PBKDF2HMAC SHA-256 (100,000 iteraciones) e integridad HMAC.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 form-group">
+          <div>
+            <label class="form-label">Texto Claro:</label>
+            <input id="aes-text" type="text" class="form-input" value="Mensaje Confidencial AES-128" />
+          </div>
+          <div>
+            <label class="form-label">Passphrase Secreta:</label>
+            <input id="aes-pass" type="text" class="form-input" value="ClaveSuperSegura2026" />
+          </div>
+        </div>
+
+        <button class="btn btn-primary-secure" onclick="ejecutarAES()">
+          <i class="fa-solid fa-bolt"></i> Cifrar con AES-128
+        </button>
+
+        <div class="mt-6">
+          <label class="form-label">Criptograma Autenticado (Base64):</label>
+          <textarea id="aes-result" class="form-input text-cyan-300 text-xs" rows="4" readonly placeholder="Criptograma AES..."></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts JavaScript del Cliente -->
+  <script src="{{ url_for('static', filename='js/main.js') }}?v=3"></script>
+</body>
+</html>

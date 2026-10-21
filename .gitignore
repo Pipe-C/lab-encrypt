@@ -1,0 +1,14 @@
+# Cache de Python
+__pycache__/
+*.pyc
+
+# Llaves criptográficas
+keys/*.pem
+
+# Archivos de datos pesados y comprimidos
+*.zip
+data/rockyou.txt
+data/rockyou_sample.txt
+
+# Entorno virtual
+venv/
