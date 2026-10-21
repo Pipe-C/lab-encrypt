@@ -234,7 +234,7 @@ Si se utiliza Argon2id mediante una biblioteca adicional, como `argon2-cffi`, de
 La siguiente estructura es orientativa. Debe ajustarse a los archivos reales del repositorio.
 
 ```text
-laboratorio_cifrado_rsa/
+lab-encrypt/
 ├── app.py
 ├── requirements.txt
 ├── scripts/
